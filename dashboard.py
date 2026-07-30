@@ -96,32 +96,32 @@ elif section == "📸 Week 6 — CDC Tracker":
 
 # ============ WEEK 7-8 — STAR SCHEMA ============
 elif section == "⭐ Week 7-8 — Star Schema":
-    st.header("GitHub Events Star Schema")
+st.header("GitHub Events Star Schema")
     st.markdown("Analytics on 836,573 real GitHub events loaded into a dimensional model.")
 
-    st.info("Connect to Postgres to see live star schema data. Run: `sudo docker start pg-cdc` first.")
+    st.info("📊 Showing cached results from local Postgres analysis (live connection only available when running locally)")
 
-    try:
-        import psycopg2
-        conn = psycopg2.connect(host="localhost", port=5432, dbname="postgres", user="postgres", password="password")
-        
-        query = """
-        SELECT et.event_type_name, COUNT(*) as count
-        FROM fact_events fe
-        JOIN dim_event_type et ON fe.event_type_sk = et.event_type_sk
-        GROUP BY et.event_type_name
-        ORDER BY count DESC
-        """
-        df_types = pd.read_sql(query, conn)
-        conn.close()
+    event_type_data = pd.DataFrame({
+        'event_type_name': ['PushEvent', 'CreateEvent', 'PullRequestEvent', 'IssueCommentEvent', 
+                             'WatchEvent', 'DeleteEvent', 'PullRequestReviewEvent', 'IssuesEvent',
+                             'PullRequestReviewCommentEvent', 'ForkEvent'],
+        'count': [200257, 26381, 15886, 10144, 8669, 6747, 5996, 3666, 3482, 2083]
+    })
 
-        st.subheader("Event Types Distribution")
-        fig = px.bar(df_types, x='event_type_name', y='count', title="GitHub Event Types")
-        st.plotly_chart(fig, use_container_width=True)
+    st.subheader("Event Types Distribution")
+    fig = px.bar(event_type_data, x='event_type_name', y='count', title="GitHub Event Types (836,573 total events)")
+    st.plotly_chart(fig, use_container_width=True)
 
-        st.dataframe(df_types)
-    except Exception as e:
-        st.error(f"Could not connect to Postgres. Make sure Docker is running. Error: {e}")
+    st.subheader("Top 10 Actors by Issues Created")
+    top_actors = pd.DataFrame({
+        'login': ['github-actions[bot]', 'kinjalsoftnoesis', 'poornima-krishnasamy', 'SAPDocs', 
+                   'linkspreed', 'juzeppej0stko', 'zspz', 'lisabenedetti', 'maxokon', 'softvision-raul-bucata'],
+        'issues_created': [227, 74, 65, 64, 43, 37, 35, 32, 23, 23]
+    })
+    fig2 = px.bar(top_actors, x='login', y='issues_created', title="Top 10 Issue Creators")
+    st.plotly_chart(fig2, use_container_width=True)
+
+    st.dataframe(event_type_data)
 
 st.sidebar.markdown("---")
 st.sidebar.caption("BuyPower Data Engineering Internship — Week 9 Capstone")
