@@ -11,7 +11,6 @@ st.set_page_config(page_title="Data Engineering Pipeline Dashboard", layout="wid
 st.title("🔥 Data Engineering Pipeline Dashboard")
 st.caption("Built by Pozhar — Weeks 4-8 combined into one live application")
 
-# Sidebar navigation
 section = st.sidebar.radio("Navigate to:", [
     "🏠 Overview",
     "📥 Week 4 — Crypto ETL",
@@ -20,7 +19,6 @@ section = st.sidebar.radio("Navigate to:", [
     "⭐ Week 7-8 — Star Schema"
 ])
 
-# ============ OVERVIEW ============
 if section == "🏠 Overview":
     st.header("Pipeline Overview")
     st.markdown("""
@@ -34,7 +32,6 @@ if section == "🏠 Overview":
     Use the sidebar to explore each stage of the pipeline.
     """)
 
-# ============ WEEK 4 — CRYPTO ETL ============
 elif section == "📥 Week 4 — Crypto ETL":
     st.header("Crypto ETL Pipeline")
     st.markdown("Extracts live cryptocurrency prices, transforms and loads them into SQLite.")
@@ -56,7 +53,6 @@ elif section == "📥 Week 4 — Crypto ETL":
     st.subheader("Raw Data")
     st.dataframe(df.head(20))
 
-# ============ WEEK 5 — DATA QUALITY ============
 elif section == "✅ Week 5 — Data Quality":
     st.header("Data Quality Checks")
     st.markdown("Runs YAML-defined validation rules against the crypto dataset.")
@@ -68,7 +64,6 @@ elif section == "✅ Week 5 — Data Quality":
     st.subheader("Known Issue Found")
     st.warning("🐛 Bug found: The `symbol` column contains Chinese characters (e.g. 币安人生) that fail the regex pattern `^[a-z0-9]+$`. This was caught automatically by the data quality checker.")
 
-# ============ WEEK 6 — CDC TRACKER ============
 elif section == "📸 Week 6 — CDC Tracker":
     st.header("Change Data Capture (CDC) Activity")
     st.markdown("Real-time log of INSERT, UPDATE and DELETE operations on the customers table.")
@@ -94,12 +89,11 @@ elif section == "📸 Week 6 — CDC Tracker":
     st.subheader("Recent Events")
     st.dataframe(df_events.tail(10))
 
-# ============ WEEK 7-8 — STAR SCHEMA ============
 elif section == "⭐ Week 7-8 — Star Schema":
-st.header("GitHub Events Star Schema")
+    st.header("GitHub Events Star Schema")
     st.markdown("Analytics on 836,573 real GitHub events loaded into a dimensional model.")
 
-    st.info("📊 Showing cached results from local Postgres analysis (live connection only available when running locally)")
+    st.info("📊 Showing cached results from local Postgres analysis")
 
     event_type_data = pd.DataFrame({
         'event_type_name': ['PushEvent', 'CreateEvent', 'PullRequestEvent', 'IssueCommentEvent', 
