@@ -5,6 +5,7 @@ import json
 import plotly.express as px
 import subprocess
 import sys
+import re
 
 st.set_page_config(page_title="Data Engineering Pipeline Dashboard", layout="wide")
 
@@ -55,14 +56,82 @@ elif section == "📥 Week 4 — Crypto ETL":
 
 elif section == "✅ Week 5 — Data Quality":
     st.header("Data Quality Checks")
-    st.markdown("Runs YAML-defined validation rules against the crypto dataset.")
+    st.markdown("Runs YAML-defined validation rules against a dataset.")
 
-    if st.button("Run Data Quality Checks"):
-        result = subprocess.run([sys.executable, "dq.py", "coin_prices.yml"], capture_output=True, text=True)
-        st.code(result.stdout, language="text")
+    tab1, tab2 = st.tabs(["📁 Upload Your Own CSV", "🪙 Crypto Dataset (Built-in)"])
 
-    st.subheader("Known Issue Found")
-    st.warning("🐛 Bug found: The `symbol` column contains Chinese characters (e.g. 币安人生) that fail the regex pattern `^[a-z0-9]+$`. This was caught automatically by the data quality checker.")
+    with tab1:
+        st.subheader("Upload a CSV to validate")
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+
+        if uploaded_file is not None:
+            df_upload = pd.read_csv(uploaded_file)
+            st.success(f"Loaded {len(df_upload):,} rows, {len(df_upload.columns)} columns")
+            st.dataframe(df_upload.head(10))
+
+            st.subheader("Configure Checks")
+            selected_col = st.selectbox("Select a column to check", df_upload.columns)
+            check_type = st.selectbox("Check type", ["not_null", "unique", "range", "regex_match"])
+
+            run_check = st.button("Run Check")
+
+            if run_check:
+                col_data = df_upload[selected_col]
+                if check_type == "not_null":
+                    failures = col_data.isnull().sum()
+                    st.write(f"**Result:** {failures} null values found")
+                    if failures == 0:
+                        st.success("✓ Passed — no nulls found")
+                    else:
+                        st.error(f"✗ Failed — {failures} nulls found")
+
+                elif check_type == "unique":
+                    failures = col_data.duplicated().sum()
+                    st.write(f"**Result:** {failures} duplicate values found")
+                    if failures == 0:
+                        st.success("✓ Passed — all values unique")
+                    else:
+                        st.error(f"✗ Failed — {failures} duplicates found")
+
+                elif check_type == "range":
+                    min_val = st.number_input("Min value", value=0.0)
+                    max_val = st.number_input("Max value", value=1000000.0)
+                    try:
+                        numeric_col = pd.to_numeric(col_data, errors='coerce')
+                        failures = ((numeric_col < min_val) | (numeric_col > max_val)).sum()
+                        st.write(f"**Result:** {failures} values out of range")
+                        if failures == 0:
+                            st.success("✓ Passed — all values in range")
+                        else:
+                            st.error(f"✗ Failed — {failures} out of range")
+                    except Exception as e:
+                        st.error(f"Could not run range check: {e}")
+
+                elif check_type == "regex_match":
+                    pattern = st.text_input("Regex pattern", value="^[a-z0-9]+$")
+                    try:
+                        failures = (~col_data.astype(str).str.match(pattern)).sum()
+                        st.write(f"**Result:** {failures} values failed the pattern")
+                        if failures == 0:
+                            st.success("✓ Passed — all values match pattern")
+                        else:
+                            st.error(f"✗ Failed — {failures} did not match")
+                            sample = col_data[~col_data.astype(str).str.match(pattern)].head(5).tolist()
+                            st.write(f"Sample failing values: {sample}")
+                    except Exception as e:
+                        st.error(f"Could not run regex check: {e}")
+        else:
+            st.info("Upload a CSV file above to run data quality checks on your own data")
+
+    with tab2:
+        st.markdown("Runs YAML-defined validation rules against the built-in crypto dataset.")
+
+        if st.button("Run Data Quality Checks", key="crypto_dq"):
+            result = subprocess.run([sys.executable, "dq.py", "coin_prices.yml"], capture_output=True, text=True)
+            st.code(result.stdout, language="text")
+
+        st.subheader("Known Issue Found")
+        st.warning("🐛 Bug found: The `symbol` column contains Chinese characters (e.g. 币安人生) that fail the regex pattern `^[a-z0-9]+$`. This was caught automatically by the data quality checker.")
 
 elif section == "📸 Week 6 — CDC Tracker":
     st.header("Change Data Capture (CDC) Activity")
@@ -118,4 +187,4 @@ elif section == "⭐ Week 7-8 — Star Schema":
     st.dataframe(event_type_data)
 
 st.sidebar.markdown("---")
-st.sidebar.caption("BuyPower Data Engineering Internship — Week 9 Capstone")
+st.sidebar.caption("BuyPower Data Engineering Internship — Week 9 Capstone By Pozhar")
